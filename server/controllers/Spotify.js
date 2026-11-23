@@ -131,7 +131,7 @@ const simplify = (track) => ({
 // Top 5 from the last 7 days, counted from recently played (max 10 plays)
 const getWeeklyTop = async (req) => {
     const after = Date.now() - ONE_WEEK_MS;
-    const data = await spotifyGet(req, '/me/player/recently-played?limit=10');
+    const data = await spotifyGet(req, '/me/player/recently-played?limit=50');
 
     const counts = {};
     data.items
@@ -147,6 +147,8 @@ const getWeeklyTop = async (req) => {
         .sort((a, b) => b.plays - a.plays)
         .slice(0, 5);
 };
+
+const status = (req, res) => res.json({ connected: !!req.session.spotify });
 
 // Top 5 from Spotify's own ranking from about the last 4 weeks 
 const getMonthlyTop = async (req) => {
@@ -180,4 +182,4 @@ const getTopTracks = async (req, res) => {
     }
 };
 
-module.exports = { login, callback, getTopTracks };
+module.exports = { login, callback, getTopTracks, status };

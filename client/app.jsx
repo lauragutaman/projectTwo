@@ -1,63 +1,24 @@
-const helper = require('./helper.js');
 const React = require('react');
 const { useState, useEffect } = React;
 const { createRoot } = require('react-dom/client');
 
-// client/app.jsx
-const React = require('react');
-const { useState, useEffect } = React;
-const { createRoot } = require('react-dom/client');
-
-// Shown when the user hasn't connected Spotify yet (server returns 401)
 const ConnectSpotify = () => (
     <div className="connect-spotify">
         <h2>Connect your Spotify</h2>
-        <p>See the songs you couldn't stop playing this week.</p>
+        <p>Log in to see your most played songs this week.</p>
         <a className="btn btn-spotify" href="/spotify/login">Connect Spotify</a>
     </div>
 );
 
-// "Your week in music" headline, built from the #1 song
-const WeekHeadline = ({ topTrack }) => {
-    if (!topTrack) {
-        return (
-            <header className="week-headline">
-                <h1>Your week in music</h1>
-                <p>No plays yet this week. Go listen to something and check back!</p>
-            </header>
-        );
-    }
-
-    const times = topTrack.plays === 1 ? 'time' : 'times';
-
-    return (
-        <header className="week-headline">
-            <h1>Your week in music</h1>
-            <p>
-                You played <strong>{topTrack.name}</strong> by {topTrack.artists}{' '}
-                <strong>{topTrack.plays} {times}</strong> this week.
-            </p>
-        </header>
-    );
-};
-
-// One song in the list
 const TrackCard = ({ track, rank }) => (
     <li className="track-card">
         <span className="track-rank">{rank}</span>
         {track.album.image && (
-            <img
-                className="track-art"
-                src={track.album.image}
-                alt={`${track.album.name} album cover`}
-            />
+            <img className="track-art" src={track.album.image} alt={`${track.album.name} cover`} width="64" />
         )}
         <div className="track-info">
-            <a className="track-name" href={track.url} target="_blank" rel="noreferrer">
-                {track.name}
-            </a>
-            <span className="track-artist">{track.artists}</span>
-            <span className="track-album">{track.album.name}</span>
+            <a className="track-name" href={track.url} target="_blank" rel="noreferrer">{track.name}</a>
+            <span className="track-artist"> — {track.artists}</span>
         </div>
         <span className="track-plays">
             {track.plays} {track.plays === 1 ? 'play' : 'plays'}
@@ -65,72 +26,72 @@ const TrackCard = ({ track, rank }) => (
     </li>
 );
 
-// The top 5 list
-const TopTracks = ({ tracks }) => {
-    if (tracks.length === 0) return null;
-
-    return (
-        <section className="top-tracks">
-            <h2>Your top {tracks.length} this week</h2>
-            <ol className="track-list">
-                {tracks.map((track, i) => (
-                    <TrackCard key={track.id} track={track} rank={i + 1} />
-                ))}
-            </ol>
-        </section>
-    );
-};
-
-// Main component: loads the data and decides what to show
 const WeekInMusic = () => {
+    // checking | disconnected | idle | loading | ready | error
+    const [status, setStatus] = useState('checking');
     const [tracks, setTracks] = useState([]);
-    const [status, setStatus] = useState('loading'); // loading | ready | disconnected | error
 
+    // On page load, only check whether Spotify is connected
     useEffect(() => {
-        const loadTracks = async () => {
-            try {
-                const response = await fetch('/api/top-tracks?range=week');
-
-                if (response.status === 401) {
-                    setStatus('disconnected');
-                    return;
-                }
-                if (!response.ok) {
-                    setStatus('error');
-                    return;
-                }
-
-                const data = await response.json();
-                setTracks(data.tracks);
-                setStatus('ready');
-            } catch (err) {
-                setStatus('error');
-            }
-        };
-        loadTracks();
+        fetch('/spotify/status')
+            .then((res) => res.json())
+            .then((data) => setStatus(data.connected ? 'idle' : 'disconnected'))
+            .catch(() => setStatus('error'));
     }, []);
 
-    if (status === 'loading') {
-        return <p className="status-message">Loading your week in music...</p>;
-    }
-    if (status === 'disconnected') {
-        return <ConnectSpotify />;
-    }
-    if (status === 'error') {
-        return <p className="status-message">Something went wrong loading your songs. Try refreshing.</p>;
-    }
+    // Runs when the button is clicked
+    const loadTopTracks = async () => {
+        setStatus('loading');
+        try {
+            const response = await fetch('/api/top-tracks?range=week');
+            if (response.status === 401) {
+                setStatus('disconnected');
+                return;
+            }
+            if (!response.ok) {
+                setStatus('error');
+                return;
+            }
+            const data = await response.json();
+            setTracks(data.tracks);
+            setStatus('ready');
+        } catch (err) {
+            setStatus('error');
+        }
+    };
+
+    if (status === 'checking') return <p>Loading...</p>;
+    if (status === 'disconnected') return <ConnectSpotify />;
 
     return (
         <div className="week-in-music">
-            <WeekHeadline topTrack={tracks[0]} />
-            <TopTracks tracks={tracks} />
+            <h1>Your week in music</h1>
+            <button type="button" onClick={loadTopTracks} disabled={status === 'loading'}>
+                {status === 'loading' ? 'Loading...' : 'Show me my top 5 songs this week'}
+            </button>
+
+            {status === 'error' && <p>Something went wrong. Try again.</p>}
+
+            {status === 'ready' && tracks.length === 0 && (
+                <p>No plays found in the past week. Go listen to something!</p>
+            )}
+
+            {status === 'ready' && tracks.length > 0 && (
+                <section className="top-tracks">
+                    <p className="note">Based on your last 50 plays from the past 7 days.</p>
+                    <ol className="track-list">
+                        {tracks.map((track, i) => (
+                            <TrackCard key={track.id} track={track} rank={i + 1} />
+                        ))}
+                    </ol>
+                </section>
+            )}
         </div>
     );
 };
 
 const init = () => {
-    const root = createRoot(document.getElementById('app'));
-    root.render(<WeekInMusic />);
+    createRoot(document.getElementById('app')).render(<WeekInMusic />);
 };
 
 window.onload = init;

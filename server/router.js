@@ -22,7 +22,13 @@ const router = (app) => {
     app.get('/albums', mid.requiresLogin, controllers.Album.getAlbums);
     app.post('/albums', mid.requiresLogin, controllers.Album.saveAlbum);
 
+    app.get('/app', mid.requiresLogin, (req, res) => res.render('app'));
 
+    // Spotify
+    app.get('/spotify/login', mid.requiresLogin, controllers.Spotify.login);
+    app.get('/spotify/callback', mid.requiresLogin, controllers.Spotify.callback);
+    app.get('/spotify/status', mid.requiresLogin, controllers.Spotify.status);
+    app.get('/api/top-tracks', mid.requiresLogin, controllers.Spotify.getTopTracks);
 };
 
 module.exports = router;

@@ -33,7 +33,13 @@ redisClient.on('error', err => console.log('Redis Client Error', err));
 redisClient.connect().then(() => {
 
     const app = express();
-    app.use(helmet());
+    app.use(helmet({
+        contentSecurityPolicy: {
+            directives: {
+                'img-src': ["'self'", 'data:', 'https://i.scdn.co'],
+            },
+        },
+    }));
     app.use('/assets', express.static(path.resolve(`${__dirname}/../hosted`)));
     app.use(compression());
     app.use(express.urlencoded({ extended: true }));
@@ -43,7 +49,7 @@ redisClient.connect().then(() => {
         store: new RedisStore({
             client: redisClient,
         }),
-        secret:process.env.SECRET,
+        secret: process.env.SECRET,
         resave: false,
         saveUninitialized: false,
     }));
