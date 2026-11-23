@@ -55,7 +55,7 @@ const WeekInMusic = () => {
             const data = await response.json();
             setTracks(data.tracks);
             setStatus('ready');
-        } catch (err) {
+        } catch {
             setStatus('error');
         }
     };
