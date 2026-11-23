@@ -6,7 +6,6 @@ const router = (app) => {
     app.get('/login', mid.requiresSecure, mid.requiresLogout, controllers.Account.loginPage);
     app.post('/login', mid.requiresSecure, mid.requiresLogout, controllers.Account.login);
 
-    // app.get('/signup', mid.requiresSecure, mid.requiresLogout, controllers.Account.signupPage);
     app.post('/signup', mid.requiresSecure, mid.requiresLogout, controllers.Account.signup);
 
     app.get('/logout', mid.requiresLogin, controllers.Account.logout);
@@ -22,13 +21,7 @@ const router = (app) => {
     app.get('/albums', mid.requiresLogin, controllers.Album.getAlbums);
     app.post('/albums', mid.requiresLogin, controllers.Album.saveAlbum);
 
-    app.get('/app', mid.requiresLogin, (req, res) => res.render('app'));
 
-    // Spotify
-    app.get('/spotify/login', mid.requiresLogin, controllers.Spotify.login);
-    app.get('/spotify/callback', mid.requiresLogin, controllers.Spotify.callback);
-    app.get('/spotify/status', mid.requiresLogin, controllers.Spotify.status);
-    app.get('/api/top-tracks', mid.requiresLogin, controllers.Spotify.getTopTracks);
 };
 
 module.exports = router;
