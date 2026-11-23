@@ -21,13 +21,19 @@
     "pretest": "eslint ./server ./client --fix"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
     "compression": "^1.8.2",
+    "connect-redis": "^11.0.0",
     "dotenv": "^18.0.10",
     "express": "^5.3.0",
     "express-handlebars": "^9.0.6",
     "express-session": "^1.19.0",
     "helmet": "^8.3.0",
-    "mongoose": "^9.12.2",
+    "mongoose": "^9.12.3",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "redis": "^6.3.1",
     "serve-favicon": "^2.5.1"
   },
   "devDependencies": {
